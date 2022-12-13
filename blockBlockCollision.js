@@ -10,7 +10,8 @@ function vectorCollision(zero1, vec1, zero2, vec2){
     return {t,u};
 }
 export function blockBlockCollision(block1, block2){
-
+    if(block1.distanceTo(block2)>block1.radius + block2.radius)
+        return false;
     var firstCol;
     var floor = block2.floor;
     var repeats1 = block2.repeats1;

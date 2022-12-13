@@ -104,4 +104,28 @@ app.get("/platform",(req,res)=>{
     res.sendFile(path.join(__dirname,"platform.js"));
 });
 
+app.get("/shipPlanetCollision",(req,res)=>{
+    res.sendFile(path.join(__dirname,"shipPlanetCollision.js"));
+});
+
+app.get("/pointPolyCollision",(req,res)=>{
+    res.sendFile(path.join(__dirname,"pointPolyCollision.js"));
+});
+
+app.get("/cannonBallShipCollision",(req,res)=>{
+    res.sendFile(path.join(__dirname,"cannonBallShipCollision.js"));
+});
+
+app.get("/cannonBallTrapDoorCollision",(req,res)=>{
+    res.sendFile(path.join(__dirname,"cannonBallTrapDoorCollision.js"));
+});
+
+app.get("/cannonBallPlanetCollision",(req,res)=>{
+    res.sendFile(path.join(__dirname,"cannonBallPlanetCollision.js"));
+});
+
+app.get("/shipShipCollision",(req,res)=>{
+    res.sendFile(path.join(__dirname,"shipShipCollision.js"));
+});
+
 app.listen(3000, ()=>console.log("listening on port 3000"));

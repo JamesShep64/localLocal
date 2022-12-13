@@ -4,7 +4,7 @@ import { CannonBall } from "./cannonBall";
 
 export class Grapple extends CannonBall{
     constructor(x, y, vec, ship, cannon){
-        super(x,y,vec,ship);
+        super(x,y,vec,null, 80,ship);
         this.exists = true;
         this.timer = 0;
         this.cannon = cannon;
@@ -22,15 +22,8 @@ export class Grapple extends CannonBall{
             this.timer += dt;
             if(this.timer > 12){
                 this.exists = false;
+                delete this;
             }
-        }
-        else{
-            var tangent = new Vector(-(this.planet.pos.y - this.start.y), (this.planet.pos.x - this.start.x)).unit();
-            this.forwardMove.x = tangent.x * 15;
-            this.forwardMove.y = tangent.y * 15;
-            this.start.x += this.forwardMove.x * dt;
-            this.start.y += this.forwardMove.y * dt;
-            
         }
     }
 

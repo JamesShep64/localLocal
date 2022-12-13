@@ -11,7 +11,7 @@ export class Polygon {
 
     //rotates about center ANGLE IN RADIANS/PI
     rotate(angle,cos,sin){
-        if(typeof angle == 'number' && !cos && angle!=0){
+        if(typeof angle == 'number' && !cos && angle!=0 && angle){
             for(var i = 0; i <this.points.length;i++){
                 var x = this.points[i].x;
                 var y = this.points[i].y;
@@ -22,7 +22,7 @@ export class Polygon {
             this.direction %= 2 * CONSTANTS.PI;
         }
 
-        if(typeof angle == 'number' && cos && angle!=0){
+        if(typeof angle == 'number' && cos && angle!=0 && sin){
             for(var i = 0; i <this.points.length;i++){
                 var x = this.points[i].x;
                 var y = this.points[i].y;

@@ -45,9 +45,21 @@ export class Cannon{
                 this.rotateBarellTo(-2 + CONSTANTS.PI);
             }
         }
+        //cannonball
+        this.ammoTimer = 0;
+        this.loadTimer = 0;
+        this.ammo = 5;
+        this.isLoading = false;
     }
 
-    update(){
+    update(dt){
+        this.ammoTimer += dt;
+        if(this.ammoTimer > 36){
+            if(this.ammo < 5){
+                this.ammo++;
+            }
+            this.ammoTimer = 0;
+        }
         if(this.line){
             this.lineVector.x = this.line.points[1].x - this.line.points[0].x;
             this.lineVector.y = this.line.points[1].y - this.line.points[0].y;
@@ -64,6 +76,10 @@ export class Cannon{
             this.pos.y += 10 * perp.y;
             this.pos.x += 10 * now.x;
             this.pos.y += 10 * now.y;
+        }
+        //load cannon
+        if(this.isLoading){
+            this.loadCannonBall(dt);
         }
     }
     rotateWire(angle){
@@ -152,8 +168,24 @@ export class Cannon{
         return proj;
     }
 
-    shootCannonBall(){
-        this.ship.cannonBalls.push(new CannonBall(this.pos.x + this.shootVec.points[0].x * 50, this.pos.y + this.shootVec.points[0].y * 50, this.shootVec.points[0], this.ship));
+    loadCannonBall(dt){
+        if(this.ammo > 0){
+            if(this.loadTimer < 12){
+                this.loadTimer += dt;
+            }
+        }
+    }
+    fireCannonBall(){
+        if(this.ammo > 0){
+            this.shootCannonBall(this.loadTimer * 18);
+            this.ammo--;
+        }
+        this.isLoading = false;
+        this.loadTimer = 0;
+    }
+
+    shootCannonBall(power){
+            this.ship.cannonBalls.push(new CannonBall(this.pos.x + this.shootVec.points[0].x * 60, this.pos.y + this.shootVec.points[0].y * 60, this.shootVec.points[0], 'a',power,this.ship));
     }
 
     shootGrapple(){

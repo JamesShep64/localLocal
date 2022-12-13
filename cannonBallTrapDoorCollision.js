@@ -9,7 +9,7 @@ function vectorCollision(zero1, vec1, zero2, vec2){
 
     return {t,u};
 }
-export function trapDoorCollision(block1, block2){
+export function cannonBallTrapDoorCollision(block1, block2){
     if(block1.distanceTo(block2.ship)>block1.radius + block2.ship.radius)
         return false;
     var firstCol;
@@ -28,24 +28,7 @@ export function trapDoorCollision(block1, block2){
                 var {t,u} = vectorCollision(zero1, vec1, zero2, vec2);
 
                 if(t > -1 && t < 1 && u >= 0 && u < 1){
-                    var mult = 1;
-                    if(t < 0){
-                        mult = -1;
-                        t = Math.abs(t);
-                    }
-                    if(floor.indexOf(j) != -1){
-                        t += .1;
-                    }
-                    var push = new Vector(1 - t, 1 - t);
-                    push.multiply(new Vector(mult, mult));
-                    push.multiply(vec1);
-                    push.multiply(new Vector(-1,-1));
-                    if(floor.indexOf(j) != -1){
-                        firstCol = {push, vec2:vec2.unit(), i};
-                    }
-                    else{
-                    firstCol = {push, t, vec2:false};
-                    }
+                    return true;    
                 }
             }
         }
@@ -64,26 +47,10 @@ export function trapDoorCollision(block1, block2){
                 var vec2 = new Vector(block1.realPoints[o].x - zero2.x, block1.realPoints[o].y - zero2.y);
                 var {t,u} = vectorCollision(zero1, vec1, zero2, vec2);
                     if(t > 0  && t < 1 && u >= 0 && u < 1){
-                        var mult = 1;
-                        if(t < 0){
-                            mult = -1;
-                            t = Math.abs(t);
-                        }
-                        var push = new Vector(1 - t, 1 - t);
-                        push.multiply(new Vector(mult, mult));
-                        push.multiply(vec1);
-                        if(!firstCol){
-                            return {push,t,vec2:false};
-                        }
-                        if(firstCol.t > t){
-                        return {push, t,vec2:false};
-                        }
-                        else{
-                            return firstCol;
-                        }
+                        return true;
                     }
             }
         }
     }
-    return firstCol;
+    return false;
 }

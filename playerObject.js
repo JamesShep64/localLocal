@@ -27,7 +27,6 @@ export class PlayerObject extends Polygon{
     this.movingLeft = false;
     this.movingUp = false;
     this.movingDown = false;
-    this.isCol = false;
     this.setMove(new Vector(1,0));
 
     //ITEM INTERACTION
@@ -46,9 +45,12 @@ export class PlayerObject extends Polygon{
     this.radius = Math.sqrt((length/2) * (length/2) + (height/2) * (height/2));
     this.repeats1 = [0,1];
     this.repeats2 = [2,3];
+    this.isCol = false;
+    this.didCol = false;
     //ladder
     this.onLadder = false;
     this.movedOnLadder = false;
+    this.didOnLadder = false;
     //telescope
     this.eyes = new Vector(x,y);
     this.onTelescope = false;
@@ -94,6 +96,9 @@ export class PlayerObject extends Polygon{
       }
 
       //GRAVITY
+      if(!this.col){
+        this.turnGravity(true);
+      }
       this.gvel.x += dt * this.gravity.x;
       this.gvel.y += dt * this.gravity.y;
       if(this.gvel.y > 200){
@@ -259,14 +264,14 @@ export class PlayerObject extends Polygon{
     if(key == ' '){
       if(!this.isUsing)
         this.doJump();
-      if(this.isUsing)
+      if(this.isUsing && !this.onTelescope)
       {
-        this.using.shootCannonBall();
+        this.using.isLoading = true;
       }
     }
 
     if(key == 'k'){
-      if(this.isUsing)
+      if(this.isUsing  && !this.onTelescope)
         this.using.shootGrapple();
     }
 
@@ -305,6 +310,13 @@ export class PlayerObject extends Polygon{
     if(key == 's'){
         this.stopDown();
     }
+
+    if(key == ' '){
+      if(this.isUsing && !this.onTelescope)
+      {
+        this.using.fireCannonBall();
+      }
+    }
   }
   moveLeft(){
     if(!this.movingLeft){
@@ -333,10 +345,16 @@ export class PlayerObject extends Polygon{
     }
 
   doJump(){
-    if(this.isCol || this.onTop || this.onLadder){
+    if(this.isCol || this.onTop || this.movedOnLadder){
       this.movedOnLadder = false;
-      this.jumpVel.x = this.jump.x * 55;
-      this.jumpVel.y = this.jump.y * 55;
+      if(this.movedOnLadder){
+        this.jumpVel.x = this.jump.x * 85;
+        this.jumpVel.y = this.jump.y * 85;  
+      }
+      else{
+        this.jumpVel.x = this.jump.x * 55;
+        this.jumpVel.y = this.jump.y * 55;
+      }
     }
   }
 
