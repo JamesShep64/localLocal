@@ -128,4 +128,7 @@ app.get("/shipShipCollision",(req,res)=>{
     res.sendFile(path.join(__dirname,"shipShipCollision.js"));
 });
 
+app.get("/explosion",(req,res)=>{
+    res.sendFile(path.join(__dirname,"explosion.js"));
+});
 app.listen(3000, ()=>console.log("listening on port 3000"));

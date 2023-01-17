@@ -17,4 +17,9 @@ export class Planet extends Polygon{
         }
         return real;
     }
+    withinRect(other,width,height){
+        if(other.pos.x < this.pos.x + width && other.pos.x > this.pos.x - width && other.pos.y < this.pos.y + height && other.pos.y > this.pos.y - height)
+          return true;
+        return false;
+      }  
 }

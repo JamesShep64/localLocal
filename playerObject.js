@@ -12,6 +12,10 @@ export class PlayerObject extends Polygon{
     this.pos = new Vector(x,y);
     this.gvel = new Vector(0,0);
     this.gravity = new Vector(0,.5);
+    this.gravityMult = 50;
+    this.withinShip = false;
+    this.didWithinShip = false;
+    this.shipWithin;
     this.netVelocity = new Vector(0,0);
     this.rightMove = new Vector(1,0);
     this.leftMove = new Vector(-1,0);
@@ -61,11 +65,7 @@ export class PlayerObject extends Polygon{
         this.drop();
       }
 
-      if(this.holding && (this.distanceTo(this.holding) > this.radius + this.holding.radius + 10)){
-        this.drop();
-      }
-
-      if(this.holding && this.holding.constructor.name == 'Block' && (this.distanceTo(this.holding) < this.radius + this.holding.radius - 10)){
+      if(this.holding && (this.distanceTo(this.holding) > this.radius + this.holding.radius)){
         this.drop();
       }
     
@@ -79,7 +79,7 @@ export class PlayerObject extends Polygon{
 
       //JUMP
       if(Math.abs(this.jumpVel.x) >= .11){
-        this.jumpVel.y += this.jumpVel.y > 0 ? -.1 : 1;
+        this.jumpVel.x += this.jumpVel.x > 0 ? -.1 : 1;
       }
       else{
         this.jumpVel.x = 0;
@@ -99,10 +99,11 @@ export class PlayerObject extends Polygon{
       if(!this.col){
         this.turnGravity(true);
       }
-      this.gvel.x += dt * this.gravity.x;
-      this.gvel.y += dt * this.gravity.y;
-      if(this.gvel.y > 200){
-        this.gvel.y = 200;
+      this.gvel.x += dt * this.gravity.x * this.gravityMult;
+      this.gvel.y += dt * this.gravity.y * this.gravityMult;
+      if(this.gvel.x + this.gvel.y > 200){
+        this.gvel.y = 200 * this.gravity.y;
+        this.gvel.x = 200 * this.gravity.x;
       }
 
       //ladder Movment    
@@ -153,6 +154,7 @@ export class PlayerObject extends Polygon{
       this.rightMove.x = vec.x * 30; this.rightMove.y = vec.y * 30;
       this.leftMove.x = vec.x * -30; this.leftMove.y = vec.y * -30;
       this.downMove.x = vec.y * -30; this.downMove.y = vec.x * 30;
+      this.gravity.x = -vec.y; this.gravity.y = vec.x;
       this.upMove.x = vec.y * 30; this.upMove.y = vec.x * -30;
       this.jump = this.upMove.unit();
    }
@@ -168,10 +170,10 @@ export class PlayerObject extends Polygon{
 
   turnGravity(b){
     if(b){
-      this.gravity.y = 10;
+      this.gravityMult = 15;
     }
     else{
-      this.gravity.y = 0;
+      this.gravityMult = 0;
       this.gvel.x = 0;
       this.gvel.y = 0;
     }
@@ -183,7 +185,8 @@ export class PlayerObject extends Polygon{
     this.hasTop[item.id] = item;
     item.beingHeld = true;
     item.holder = this;
-    item.holdVec = new Vector(item.pos.x - this.pos.x, item.pos.y - this.pos.y);
+    var slope = new Vector(item.pos.x - this.pos.x, item.pos.y - this.pos.y).unit();
+    item.holdVec = new Vector(item.pos.x - this.pos.x + slope.x * 5, item.pos.y - this.pos.y + slope.y * 5);
     item.turnGravity(false);
     item.wasJustHeld = true;
   }
@@ -346,15 +349,16 @@ export class PlayerObject extends Polygon{
 
   doJump(){
     if(this.isCol || this.onTop || this.movedOnLadder){
-      this.movedOnLadder = false;
       if(this.movedOnLadder){
-        this.jumpVel.x = this.jump.x * 85;
-        this.jumpVel.y = this.jump.y * 85;  
+        this.jumpVel.x = this.jump.x * 65;
+        this.jumpVel.y = this.jump.y * 65;
+        console.log('a');  
       }
       else{
-        this.jumpVel.x = this.jump.x * 55;
-        this.jumpVel.y = this.jump.y * 55;
+        this.jumpVel.x = this.jump.x * 45;
+        this.jumpVel.y = this.jump.y * 45;
       }
+      this.movedOnLadder = false;
     }
   }
 
@@ -396,6 +400,11 @@ export class PlayerObject extends Polygon{
 distanceTo(player){
   return Math.sqrt((this.pos.x - player.pos.x) * (this.pos.x - player.pos.x) + (this.pos.y - player.pos.y) * (this.pos.y - player.pos.y));
 }
+withinRect(other,width,height){
+  if(other.pos.x < this.pos.x + width && other.pos.x > this.pos.x - width && other.pos.y < this.pos.y + height && other.pos.y > this.pos.y - height)
+    return true;
+  return false;
+}  
 serializeForUpdate() {
   return {
     id: this.id,

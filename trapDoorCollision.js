@@ -10,8 +10,6 @@ function vectorCollision(zero1, vec1, zero2, vec2){
     return {t,u};
 }
 export function trapDoorCollision(block1, block2){
-    if(block1.distanceTo(block2.ship)>block1.radius + block2.ship.radius)
-        return false;
     var firstCol;
     var floor = block2.floor;
     for(var i = 0; i < 2; i++){

@@ -97,8 +97,15 @@ export class Block extends Polygon{
   }
 
   distanceTo(player){
-  return Math.sqrt((this.pos.x - player.pos.x) * (this.pos.x - player.pos.x) + (this.pos.y - player.pos.y) * (this.pos.y - player.pos.y));
+    return Math.sqrt((this.pos.x - player.pos.x) * (this.pos.x - player.pos.x) + (this.pos.y - player.pos.y) * (this.pos.y - player.pos.y));
   }
+
+  withinRect(other,width,height){
+    if(other.pos.x < this.pos.x + width && other.pos.x > this.pos.x - width && other.pos.y < this.pos.y + height && other.pos.y > this.pos.y - height)
+      return true;
+    return false;
+  }  
+
 
   serializeForUpdate() {
   return {

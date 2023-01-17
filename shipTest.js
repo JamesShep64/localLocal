@@ -34,6 +34,7 @@ var lineWidth = 3;
 var planets = [];
 var mouseX;
 var mouseY;
+var lastUpdateTime = 0;
 window.addEventListener('resize', setCanvasDimensions);
 window.addEventListener('keydown',keysDown);
 window.addEventListener('keyup',keysUp);
@@ -103,7 +104,7 @@ function keysDown(e){
     }
 
     if(e.key == 'b'){
-      blocks[blockID] = new Block(blockID, -canvas.width / 2 + mouseX + player.pos.x, -canvas.height / 2 + mouseY + player.pos.y,15,15);
+      blocks[blockID] = new Block(blockID, -canvas.width / 2 + mouseX + player.pos.x, -canvas.height / 2 + mouseY + player.pos.y,20,20);
       blockID += 'a';
     }
 }
@@ -150,15 +151,9 @@ function mousemove(m){
   mouseY = m.clientY;
 }
 
-function drawPoly(block, me,x,y){
-  if(!x){
+function drawPoly(block, me){
     var canvasX = canvas.width / 2 + block.pos.x - me.eyes.x;
     var canvasY = canvas.height / 2 + block.pos.y - me.eyes.y;
-  }
-  else{
-    var canvasX = canvas.width / 2 + x - me.eyes.x;
-    var canvasY = canvas.height / 2 + y - me.eyes.y;
-  }
     context.restore();
     context.lineWidth = lineWidth;
     context.strokeStyle = color;
@@ -243,24 +238,48 @@ function setCanvasDimensions() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 }
-
+function drawCannonWire(block,me,x,y){
+  var canvasX = canvas.width / 2 + x - me.eyes.x;
+  var canvasY = canvas.height / 2 + y - me.eyes.y;
+  context.restore();
+  var o;
+  context.beginPath();
+  for(var i = 0; i<block.points.length; i++){
+    o = i + 1;
+    if(o == block.points.length){
+      o = 0;
+    }
+    if(i == 0){
+    context.moveTo(canvasX + block.points[i].x, canvasY + block.points[i].y);
+    }
+    else{
+    context.lineTo(canvasX + block.points[i].x, canvasY + block.points[i].y);
+    }
+    if(i == block.points.length - 1){
+      context.lineTo(canvasX + block.points[0].x, canvasY + block.points[0].y);
+    }
+  }
+  context.closePath();
+  context.stroke();
+}
 setInterval(draw,1000/60);
 setCanvasDimensions();
 function draw(){
+
 //clear rect 
   context.clearRect(0,0,window.innerWidth,window.innerHeight);
   renderBackround(player.eyes.x, player.eyes.y);
   context.fillStyle = 'black';
-  player.update(60/1000);  
   ships.forEach(ship =>{  
     ship.update(60/1000);
   });
   
-ships.forEach(ship =>{
-  for(var i = 0; i < ship.cannonBalls.length; i++){
-    ship.cannonBalls[i].update(60/1000);
-  }
-});
+  player.update(60/1000);  
+  ships.forEach(ship =>{
+    for(var i = 0; i < ship.cannonBalls.length; i++){
+      ship.cannonBalls[i].update(60/1000);
+    }
+  });
 
   Object.keys(blocks).forEach(id =>{
     blocks[id].update(60/1000);
@@ -289,6 +308,8 @@ ships.forEach(ship =>{
         ship.hasPlayers[player.id] = player; 
         player.isCol = true;
         player.didCol = true;
+        player.withinShip = true;
+        player.shipWithin = ship;
         }
         player.displace.add(push);
       }
@@ -296,6 +317,9 @@ ships.forEach(ship =>{
     else{
       color = 'black';
       delete ship.hasPlayers[player.id];
+    }
+    if(player.shipWithin == ship && player.distanceTo(ship) < ship.radius){
+      player.didWithinShip = true;
     }
 
     //player trap door Collision
@@ -428,9 +452,8 @@ ships.forEach(ship =>{
         if(ship.cannonBalls[i]){
           var collision = cannonBallShipCollision(ship.cannonBalls[i],otherShip);
           if(collision){
-            ship.cannonBalls[i].explode();
+            otherShip.takeDamage(collision.u, collision.j,ship.cannonBalls[i].power);
             ship.cannonBalls.splice(i,1);
-            otherShip.takeDamage(collision.u, collision.j);
           }
         }
       });
@@ -479,23 +502,29 @@ ships.forEach(ship =>{
     }
   });
 
-  //PLAYER COLLISION FIX
-  if(!player.didCol){
-    player.isCol = false;
-  }
-  player.didCol = false;
-
+  //PLAYER LADDER FIX
   if(!player.didOnLadder){
     player.onLadder = false;
   }
   player.didOnLadder = false;
 
+  //player within ship fix
+  if(!player.didWithinShip){
+    console.log('a');
+    player.withinShip = false;
+    player.shipWithin = null;
+    player.setMove(new Vector(1,0));
+    player.rotateTo(0);
+  }
+  player.didWithinShip = false;
 
    //player block Collision
    Object.keys(blocks).forEach(id =>{
-    if(blocks[id].holder != player){
       var happened = blockCollision(player,blocks[id]);
       if(happened){  
+        if(blocks[id].holder == player){
+          player.drop();
+        }
         color = 'red';
         var {push, vec2} = happened;
         if(vec2){
@@ -505,28 +534,35 @@ ships.forEach(ship =>{
           player.turnGravity(false);
           player.onTop = true;
           blocks[id].hasTop[player.id] = player;
+          player.isCol = true;
+          player.didCol = true;
         }
         else{
-          delete blocks[id].hasTop[player.id];
+          if(blocks[id].hasTop[player.id]){
+            player.onTop = false;
+            delete blocks[id].hasTop[player.id];
+          }
           if(player.isGrabing && !player.isHolding){
             player.grab(blocks[id]);
           }
         }
-        if(blocks[id].wasJustHeld){
-          push.x *= -1;
-          push.y *= -1;
-          blocks[id].displace.add(push);
-        }
-        else{player.displace.add(push)};
+        player.displace.add(push);
       }
       else{
         blocks[id].wasJustHeld = false;
         color = 'black';
-        delete blocks[id].hasTop[player.id];
+        if(blocks[id].hasTop[player.id]){
+          player.onTop = false;
+          delete blocks[id].hasTop[player.id];
+        }
       }
-    }
-
   });  
+    
+  //PLAYER COLLISION FIX
+    if(!player.didCol){
+      player.isCol = false;
+    }
+    player.didCol = false;
 
   //block block Collision
   var comboCol = {};
@@ -541,7 +577,7 @@ ships.forEach(ship =>{
       if(blocks[id] != blocks[id2] && comboCol[id2].indexOf(id) == -1){
           var swaped = false;
         
-        if(blocks[id].beingHeld){
+        if(blocks[id2].beingHeld){
           [id, id2] = [id2, id]; swaped = true;
         }
         else{
@@ -617,7 +653,7 @@ ships.forEach(ship =>{
   ships.forEach(ship =>{  
   lineWidth = 1;
   context.strokeStyle = 'black';
-  drawPoly(ship.cannonWire1, player, ship.pos.x, ship.pos.y);
+  drawCannonWire(ship.cannonWire1, player);
   context.restore();
   
   //draw cannonBalls
@@ -628,6 +664,17 @@ ships.forEach(ship =>{
     context.arc(canvasX, canvasY, ship.cannon1.radius, 0, 2*CONSTANTS.PI);
     context.fill();
   }
+
+  //draw explosions
+  Object.keys(ship.explosions).forEach(id =>{
+    var canvasX = canvas.width / 2 +  ship.explosions[id].pos.x - player.pos.x;
+    var canvasY = canvas.height / 2 + ship.explosions[id].pos.y - player.pos.y;
+    context.beginPath();
+    context.arc(canvasX, canvasY, ship.explosions[id].radius, 0, 2*CONSTANTS.PI);
+    context.fillStyle = 'red';
+    context.fill();
+  });
+  context.fillStyle = 'black';
 
   //draw graple
 if(ship.grapple){
@@ -655,7 +702,7 @@ if(ship.grapple){
     context.fillStyle = "rgb("+(ship.cannon1.loadTimer*18).toString()+", 10, 10)";
     context.fill();
     context.fillStyle = 'black';
-    
+    /*
     //drawLowerCannon1
     var canvasX = canvas.width / 2 + ship.cannonLower1.pos.x - player.eyes.x;
     var canvasY = canvas.height / 2 + ship.cannonLower1.pos.y - player.eyes.y;
@@ -677,7 +724,7 @@ if(ship.grapple){
     context.fillStyle = "rgb("+(ship.cannonLower2.loadTimer*18).toString()+", 10, 10)";
     context.fill();
     context.fillStyle = 'black';
-
+    */
     //draw ladder, mast, and trap door
     drawTrapDoor(ship.trapDoor,player);
     drawPoly(ship.ladder,player);
@@ -695,12 +742,18 @@ if(ship.grapple){
     context.fill();
     drawPoly(ship.telescope,player);
 
-    //draw Telescope
+    //draw button
     var canvasX = canvas.width / 2 + ship.pos.x + ship.button.x - player.eyes.x;
     var canvasY = canvas.height / 2 + ship.pos.y + ship.button.y - player.eyes.y;
     context.beginPath();
     context.arc(canvasX, canvasY, ship.buttonRadius, 0, 2*CONSTANTS.PI);
     context.fill();
+
+    var canvasX = canvas.width / 2 + ship.pos.x - player.eyes.x;
+    var canvasY = canvas.height / 2 + ship.pos.y - player.eyes.y;
+    context.beginPath();
+    context.arc(canvasX, canvasY, ship.radius, 0, 2*CONSTANTS.PI);
+    context.stroke();
   });
     //draw planets
     for(var i = 0; i < planets.length; i++){
@@ -713,5 +766,6 @@ if(ship.grapple){
     Object.keys(blocks).forEach(id =>{
       drawPoly(blocks[id],player);
     });
-  
+
+    
 }

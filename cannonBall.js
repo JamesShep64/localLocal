@@ -1,4 +1,5 @@
 import Vector from "./2Dvector";
+import { Explosion } from "./explosion";
 import { Polygon } from "./polygon";
 
 export class CannonBall extends Polygon{
@@ -31,13 +32,15 @@ export class CannonBall extends Polygon{
         this.pos.y += dt * this.netVelocity.y;
     }
 
-    explode(){
-        delete this;
-    }
-
     distanceTo(player){
         return Math.sqrt((this.pos.x - player.pos.x) * (this.pos.x - player.pos.x) + (this.pos.y - player.pos.y) * (this.pos.y - player.pos.y));
     }
+    
+    withinRect(other,width,height){
+        if(other.pos.x < this.pos.x + width && other.pos.x > this.pos.x - width && other.pos.y < this.pos.y + height && other.pos.y > this.pos.y - height)
+          return true;
+        return false;
+      }  
 
     get realPoints(){
         var real = [];
