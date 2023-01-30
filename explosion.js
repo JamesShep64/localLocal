@@ -10,9 +10,12 @@ export class Explosion{
         this.hitboxExist = 0;
         this.ship = ship;
         this.surface = surface;
+        this.netVelocity = new Vector(ship.netVelocity.x,ship.netVelocity.y);
     }
 
     update(dt){
+        this.pos.x += dt * this.netVelocity.x;
+        this.pos.y += dt * this.netVelocity.y;
         this.hitboxExist++;
         this.timer += dt;
         if(this.timer > 5){

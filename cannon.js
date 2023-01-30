@@ -113,10 +113,9 @@ export class Cannon{
     }
 
     rotateBarellTo(angle){
-        this.direction = angle;
-        this.direction %= 2*CONSTANTS.PI;
-        this.barell.rotate(angle);
-        this.shootVec.rotate(angle);
+        angle %= 2 * CONSTANTS.PI;
+        this.barell.rotate(angle - this.direction);
+        this.shootVec.rotate(angle - this.direction);
     }
 
 
@@ -170,8 +169,11 @@ export class Cannon{
 
     loadCannonBall(dt){
         if(this.ammo > 0){
-            if(this.loadTimer < 12){
+            if(!(this.loadTimer > 12)){
                 this.loadTimer += dt;
+            }
+            else{
+                this.loadTimer = 12;
             }
         }
     }
@@ -189,9 +191,12 @@ export class Cannon{
     }
 
     shootGrapple(){
-        if(!this.ship.grapple && this.line)
+        if(!this.ship.grapple && this.line){
             this.ship.grapple = (new Grapple(this.pos.x + this.shootVec.points[0].x * 50, this.pos.y + this.shootVec.points[0].y * 50, this.shootVec.points[0], this.ship, this));
+        }
+        else{
+            this.ship.continueGrapple = true;
+        }
     }
-
 
 } 

@@ -7,8 +7,9 @@ import {Ladder} from "./ladder";
 import { Platform } from "./platform";
 import { Telescope } from "./telescope";
 import { Explosion } from "./explosion";
+import { Flag } from "./flag";
 export class PirateShip extends Polygon{
-  constructor(x, y,type) {
+  constructor(x, y,type,name) {
     if(type == 'dingy'){
       super([new Vector(-200, -25), new Vector(200, -25), new Vector(200, 0), new Vector(100, 100), new Vector(-100,100), new Vector(-200, 0)]);
       this.radius = 225;
@@ -26,7 +27,7 @@ export class PirateShip extends Polygon{
     this.friction = new Vector(0,0);
     this.forward = new Vector(1,0);
     this.forwardMove = new Vector(15,0);
-    
+  
     //stop vec
     this.stop = false;
     //Collision Vectors
@@ -43,6 +44,10 @@ export class PirateShip extends Polygon{
       this.mast = new Ladder(this, [new Vector(70,-30), new Vector(55,-30), new Vector(55,-160), new Vector(70,-160)]);
       this.button = this.mast.points[1];
       this.buttonRadius = 5;
+      this.flag = new Flag(this,name,'red');
+      this.namePoint = new Vector(75,-115);
+      this.name = name;
+      this.damageDown = [0,false,1,0,0,true,1,true,0,3,2,1,false,true];
     }
     //collision
     this.isCol = false;
@@ -74,9 +79,10 @@ export class PirateShip extends Polygon{
 
     }
 
-    //cannon Balls
+    //cannon Balls and grapple
     this.cannonBalls = [];
     this.grapple;
+    this.continueGrapple = false;
 
     //explosions
     this.explosions = {};
@@ -90,6 +96,7 @@ export class PirateShip extends Polygon{
     this.rotOGCounter = 0;
     this.turn = 1;
     this.tangent = new Vector(0,0);
+    this.continued = false;
 
     //Takedamage 
     this.damages = [];
@@ -156,7 +163,7 @@ export class PirateShip extends Polygon{
 
     //damage torque
     for(var i = 0; i < this.damages.length; i++){
-      this.torque -= (this.damages[i].x)/1500;
+      this.torque -= (this.damages[i].point.x)/1500;
     }
 
     if(!this.inOrbit){
@@ -239,9 +246,20 @@ export class PirateShip extends Polygon{
     this.tangent = new Vector(-this.turn * (this.planet.pos.y - this.pos.y), this.turn * (this.planet.pos.x - this.pos.x)).unit();
     var now = new Vector(this.turn * (this.points[1].x - this.points[0].x), this.turn * (this.points[1].y - this.points[0].y)).unit();
     var rot = Math.acos(this.tangent.dot(now));
-        if(this.direction < -this.turn * CONSTANTS.PI + .1 && this.direction > -this.turn * CONSTANTS.PI - .1){
+        
+        if(this.continueGrapple && this.direction < -this.turn * CONSTANTS.PI + .1 && this.direction > -this.turn * CONSTANTS.PI - .1){
+          this.continued = true;        
+        }
+        if(!this.continueGrapple && this.direction < -this.turn * CONSTANTS.PI + .1 && this.direction > -this.turn * CONSTANTS.PI - .1){
+            this.grapple.detach();
+            this.flip();
+        }
+        else if(this.continued && this.direction <  .1 && this.direction >  -.1){
           this.grapple.detach();
-          this.flip();
+          this.continued = false;
+          this.cannon1.rotateBarellTo(0);
+          this.cannonLower1.rotateBarellTo(2);
+          this.cannonLower2.rotateBarellTo(CONSTANTS.PI - 2);
         }
         else{
           this.rotate(-this.turn * rot,true);
@@ -249,7 +267,6 @@ export class PirateShip extends Polygon{
           this.forwardMove.y = this.tangent.y * 15;
         }
   }
-
   getIntoOrbit(rot){
     this.tangent = new Vector(-this.turn * (this.planet.pos.y - this.pos.y), this.turn * (this.planet.pos.x - this.pos.x)).unit();
     this.rotate(-this.turn * rot/60,true);
@@ -319,6 +336,7 @@ export class PirateShip extends Polygon{
       this.ladder.rotate(angle,cos,sin);
       this.mast.rotate(angle,cos,sin);
       this.platform.rotate(angle,cos,sin);
+      this.flag.rotate(angle,cos,sin);
       for(var i = 0; i<this.collisionZeros.length;i++){
         if(this.collisionZeros[i] != 'a' && i != 1 && i != 8){
           var x = this.collisionZeros[i].x;
@@ -338,10 +356,10 @@ export class PirateShip extends Polygon{
       this.collisionZero8.y = y * cos + x * sin;
 
       for(var i = 0; i<this.damages.length;i++){
-          var x = this.damages[i].x;
-          var y = this.damages[i].y;
-          this.damages[i].x = x * cos - y * sin;
-          this.damages[i].y = y * cos + x * sin;
+          var x = this.damages[i].point.x;
+          var y = this.damages[i].point.y;
+          this.damages[i].point.x = x * cos - y * sin;
+          this.damages[i].point.y = y * cos + x * sin;
       }
 
       for(var i = 0; i<this.trapDoor.collisionZeros.length;i++){
@@ -360,6 +378,11 @@ export class PirateShip extends Polygon{
             this.platform.collisionZeros[i].y = y * cos + x * sin;
           }
         }
+        var x = this.namePoint.x;
+        var y = this.namePoint.y;
+        this.namePoint.x = x * cos - y * sin;
+        this.namePoint.y = y * cos + x * sin;
+
       }
     if(doObjects){
       for(var id in this.hasPlayers){
@@ -398,14 +421,30 @@ export class PirateShip extends Polygon{
     }
     var no = false;
     var surface = new Vector(this.points[o].x - this.points[j].x, this.points[o].y - this.points[j].y);
+    if(j == 9 || j == 13){
+      u = .5;
+    }
+    else{
+      if(Math.abs(this.points[j].x + (surface.x) * u - this.points[j].x) < 10){
+        var signX = this.points[o].x - this.points[j].x > 0 ? 1 : -1;
+        u = 1 - ((this.points[o].x - (this.points[j].x + signX * 10))/surface.x); 
+      }
+      if(Math.abs(this.points[j].x + (surface.x) * u - this.points[o].x) < 10){
+        var signX = this.points[o].x - this.points[j].x > 0 ? 1 : -1;
+        u = ((this.points[o].x - signX * 10) - this.points[j].x)/surface.x; 
+      }
+  }
     var damage = new Vector(this.points[j].x +(surface.x) * u, this.points[j].y + (surface.y) * u);
     for(var i = 0; i < this.damages.length; i++){
-      if(damage.x < this.damages[i].x + 10 && damage.x > this.damages[i].x - 10 && damage.y < this.damages[i].y + 10 && damage.y > this.damages[i].y - 10){
+      if(damage.x < this.damages[i].point.x + 20 && damage.x > this.damages[i].point.x - 20 && damage.y < this.damages[i].point.y + 20 && damage.y > this.damages[i].point.y - 20){
+        this.damages[i].health -= power;
+        if(this.damages[i].health < 0)
+          this.damages[i].health = 0;
         no = true;
       }
     }
     if(!no){
-      this.damages.push(damage);
+      this.damages.push({point : damage, surface : j, health : 300 - power});
       this.explosions[this.explosionID] = new Explosion(this.pos.x + damage.x, this.pos.y + damage.y,power,surface,this,this.explosionID);
       this.explosionID += 'a';
     }

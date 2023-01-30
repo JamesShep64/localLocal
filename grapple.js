@@ -42,6 +42,7 @@ export class Grapple extends CannonBall{
         this.planet = null;
         this.ship.justGrappled = true;
         this.ship.rotOGCounter = 0;
+        this.ship.continueGrapple = false;
         delete this;
     }
 
