@@ -14,6 +14,7 @@ export class Block extends Polygon{
     this.netVelocity = new Vector(0,0);
     this.displace = new Vector(0,0);
     this.friction = new Vector(0,0);
+    this.boomVel = new Vector(0,0);
     this.isCol = false;
     this.floor = [0];
     //PLAYER INTERACTION
@@ -40,8 +41,8 @@ export class Block extends Polygon{
     }
 
     //APPLY VELOCITIES
-    this.netVelocity.x = this.gvel.x + this.friction.x;
-    this.netVelocity.y = this.gvel.y + this.friction.y;
+    this.netVelocity.x = this.gvel.x + this.friction.x + this.boomVel.x;
+    this.netVelocity.y = this.gvel.y + this.friction.y + this.boomVel.y;
     if(!this.beingHeld){
       this.pos.x += dt * this.netVelocity.x;
       this.pos.y += dt * this.netVelocity.y;
@@ -65,6 +66,13 @@ export class Block extends Polygon{
   applyFriction(vec){
     this.friction.x = vec.x;
     this.friction.y = vec.y;
+    this.boomVel.x = 0;
+    this.boomVel.y = 0;
+
+  }
+  boom(vec){
+    this.boomVel.x = vec.x * 60;
+    this.boomVel.y = vec.y * 60;
   }
 
   turnGravity(b){

@@ -435,6 +435,9 @@ export class PirateShip extends Polygon{
       }
   }
     var damage = new Vector(this.points[j].x +(surface.x) * u, this.points[j].y + (surface.y) * u);
+    this.explosions[this.explosionID] = new Explosion(this.pos.x + damage.x, this.pos.y + damage.y,power,surface,damage,this,this.explosionID);
+    this.explosionID += 'a';
+
     for(var i = 0; i < this.damages.length; i++){
       if(damage.x < this.damages[i].point.x + 20 && damage.x > this.damages[i].point.x - 20 && damage.y < this.damages[i].point.y + 20 && damage.y > this.damages[i].point.y - 20){
         this.damages[i].health -= power;
@@ -445,9 +448,7 @@ export class PirateShip extends Polygon{
     }
     if(!no){
       this.damages.push({point : damage, surface : j, health : 300 - power});
-      this.explosions[this.explosionID] = new Explosion(this.pos.x + damage.x, this.pos.y + damage.y,power,surface,this,this.explosionID);
-      this.explosionID += 'a';
-    }
+      }
   }
 
   serializeForUpdate() {

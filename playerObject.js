@@ -27,6 +27,7 @@ export class PlayerObject extends Polygon{
     this.jump = new Vector(0,1);
     this.friction = new Vector(0,0);
     this.jumpVel = new Vector(0,0);
+    this.boomVel = new Vector(0,0);
     this.movingRight = false;
     this.movingLeft = false;
     this.movingUp = false;
@@ -121,8 +122,8 @@ export class PlayerObject extends Polygon{
         this.netVelocity.y += this.horizMove.y + this.vertMove.y;
       }
 
-      this.netVelocity.x += this.gvel.x + this.friction.x + this.jumpVel.x;
-      this.netVelocity.y += this.gvel.y + this.friction.y + this.jumpVel.y;
+      this.netVelocity.x += this.gvel.x + this.friction.x + this.jumpVel.x + this.boomVel.x;
+      this.netVelocity.y += this.gvel.y + this.friction.y + this.jumpVel.y + this.boomVel.y;
       this.pos.x += dt * this.netVelocity.x;
       this.pos.y += dt * this.netVelocity.y;
 
@@ -162,6 +163,8 @@ export class PlayerObject extends Polygon{
   applyFriction(vec,dont){
     this.friction.x = vec.x;
     this.friction.y = vec.y;
+    this.boomVel.x = 0;
+    this.boomVel.y = 0;
     if(!dont){
       this.jumpVel.x = 0;
       this.jumpVel.y = 0;
@@ -179,6 +182,10 @@ export class PlayerObject extends Polygon{
     }
   }
 
+  boom(vec){
+    this.boomVel.x = vec.x * 60;
+    this.boomVel.y = vec.y * 60;
+  }
   grab(item){
     this.holding = item;
     this.isHolding = true;

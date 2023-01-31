@@ -18,6 +18,7 @@ import { cannonBallShipCollision } from "./cannonBallShipCollision";
 import { cannonBallTrapDoorCollision } from "./cannonBallTrapDoorCollision";
 import { cannonBallPlanetCollision } from "./cannonBallPlanetCollision";
 import { shipShipCollision } from "./shipShipCollision";
+import { Explosion } from "./explosion";
 var color;
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -111,6 +112,10 @@ function keysDown(e){
       blocks[blockID] = new Block(blockID, -canvas.width / 2 + mouseX + player.pos.x, -canvas.height / 2 + mouseY + player.pos.y,20,20);
       blockID += 'a';
     }
+    if(e.key == 't'){
+      ships[0].explosions[ships[0].explosionID] = new Explosion( -canvas.width / 2 + mouseX + player.pos.x, -canvas.height / 2 + mouseY + player.pos.y,100,new Vector(1,0),ships[0],ships[0].explosionID);
+      ships[0].explosionID++;
+    }
 }
 
 function keysUp(e){
@@ -200,7 +205,6 @@ function drawPoly(block, me){
       if(o == ship.points.length){
         o = 0;
       }
-      console.log(ship.damages);
       var surface = new Vector(ship.points[o].x - ship.points[i].x, ship.points[o].y - ship.points[i].y).unit();
       var perp = new Vector((ship.points[o].y - ship.points[i].y), -(ship.points[o].x - ship.points[i].x)).unit();
       if(i == 0){
@@ -655,6 +659,36 @@ function draw(){
       });
     }
 
+    //player explosion collision
+    Object.values(ship.explosions).filter(e => e.hitboxExist < 3).forEach(e =>{
+      if(player.withinRect(e,(e.radius + player.radius)/2,(e.radius + player.radius)/2)){
+        if(player.distanceTo(e) < player.radius + e.radius){
+          var d = new Vector(player.pos.x - (e.point.x + ship.pos.x), player.pos.y - (e.point.y + ship.pos.y)).unit();
+          var p = new Vector(e.surface.y, -e.surface.x).unit();
+          p.add(d);
+          player.boom(p.unit());             
+          player.withinShip = false;
+          player.shipWithin = null;
+          player.setMove(new Vector(1,0));
+          player.rotateTo(0);
+      
+        }
+      }
+    });
+
+    //block explosion collision 
+    Object.values(blocks).forEach(block =>{
+      Object.values(ship.explosions).filter(e => e.hitboxExist < 3).forEach(e =>{
+        if(block.withinRect(e,e.radius,e.radius)){
+          if(block.distanceTo(e) < block.radius + e.radius){
+            var d = new Vector(block.pos.x - (e.point.x + ship.pos.x), block.pos.y - (e.point.y + ship.pos.y)).unit();
+            var p = new Vector(e.surface.y, -e.surface.x).unit();
+            p.add(d);
+            block.boom(p.unit());             
+          }
+        }
+      });
+    });
     //ship ship collision
     for(var i = 0; i < ships.length; i++){
       var happened = shipShipCollision(ship, ships[i]);
@@ -664,6 +698,8 @@ function draw(){
         ships[i].displace.add(new Vector(-push.x/2, -push.y/2));
       }
     }
+
+
   });
 
   //PLAYER LADDER FIX
@@ -720,6 +756,8 @@ function draw(){
         }
       }
   });  
+
+
     
   //PLAYER COLLISION FIX
     if(!player.didCol){
@@ -781,6 +819,7 @@ function draw(){
       }
     });
   });
+  
   
   //update displacements
   player.updateDisplace();
