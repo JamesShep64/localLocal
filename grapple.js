@@ -32,6 +32,8 @@ export class Grapple extends CannonBall{
         this.planet = planet;
         this.gotHooked = true;
         this.ship.planet = planet;
+        if(planet.constructor.name == 'Asteroid')
+            this.ship.onAsteroid = true;
     }
 
     detach(){
@@ -43,7 +45,7 @@ export class Grapple extends CannonBall{
         this.ship.justGrappled = true;
         this.ship.rotOGCounter = 0;
         this.ship.continueGrapple = false;
-        delete this;
+        this.ship.onAsteroid = false;
     }
 
     distanceTo(player){

@@ -19,12 +19,15 @@ import { cannonBallTrapDoorCollision } from "./cannonBallTrapDoorCollision";
 import { cannonBallPlanetCollision } from "./cannonBallPlanetCollision";
 import { shipShipCollision } from "./shipShipCollision";
 import { Explosion } from "./explosion";
+import { Asteroid } from "./asteroid";
 var color;
+var ldown = false;
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 context.save();
 var rDown = false;
 var ships = [];
+var asteroids = [];
 var userShip;
 var player = new PlayerObject(0,'1',window.innerWidth/2-300,window.innerHeight/2-250,25,25);
 ships.push(new PirateShip(window.innerWidth/2-100,window.innerHeight/2-100,'gallion','ARGGGG'));
@@ -35,6 +38,9 @@ var lineWidth = 3;
 var planets = [];
 var mouseX;
 var mouseY;
+var AsteroidLineStart = new Vector(0,0);
+var AsteroidLineEnd = new Vector(0,0);
+
 var lastUpdateTime = 0;
 window.addEventListener('resize', setCanvasDimensions);
 window.addEventListener('keydown',keysDown);
@@ -115,6 +121,18 @@ function keysDown(e){
     if(e.key == 't'){
       ships[0].explosions[ships[0].explosionID] = new Explosion( -canvas.width / 2 + mouseX + player.pos.x, -canvas.height / 2 + mouseY + player.pos.y,100,new Vector(1,0),ships[0],ships[0].explosionID);
       ships[0].explosionID++;
+    }
+    if(e.key == 'l'){
+      ldown = ldown ? false : true;
+      if(!ldown){
+        AsteroidLineStart.x = (-canvas.width / 2 + mouseX + player.pos.x);
+        AsteroidLineStart.y = -canvas.height / 2 + mouseY + player.pos.y;
+      }
+      else{
+        AsteroidLineEnd.x = (-canvas.width / 2 + mouseX + player.pos.x);
+        AsteroidLineEnd.y = -canvas.height / 2 + mouseY + player.pos.y;
+        asteroids.push(new Asteroid('a',AsteroidLineStart,new Vector(AsteroidLineEnd.x - AsteroidLineStart.x, AsteroidLineEnd.y - AsteroidLineStart.y)));
+      }
     }
 }
 
@@ -429,7 +447,7 @@ function draw(){
   const dt = (now - lastUpdateTime) / 1000;
   lastUpdateTime = now;
 
-//clear rect 
+  //clear rect 
   context.clearRect(0,0,window.innerWidth,window.innerHeight);
   renderBackround(player.eyes.x, player.eyes.y);
   context.fillStyle = 'black';
@@ -438,6 +456,9 @@ function draw(){
   });
   
   player.update(60/1000);  
+  asteroids.forEach(a =>{
+    a.update(60/1000);
+  })
   ships.forEach(ship =>{
     for(var i = 0; i < ship.cannonBalls.length; i++){
       ship.cannonBalls[i].update(60/1000);
@@ -447,6 +468,7 @@ function draw(){
   Object.keys(blocks).forEach(id =>{
     blocks[id].update(60/1000);
   });
+
 
   ships.forEach(ship =>{
     //ship planet collision
@@ -643,6 +665,16 @@ function draw(){
       for(var i = 0; i<planets.length; i++){
         if(ship.grapple.distanceTo(planets[i]) < 100){
           ship.grapple.hook(planets[i]);
+          ship.orbit();
+        }
+      }
+    }
+
+    //graple asteroid collision
+    if(ship.grapple && !ship.grapple.gotHooked){
+      for(var i = 0; i<asteroids.length; i++){
+        if(ship.grapple.distanceTo(asteroids[i]) < 100){
+          ship.grapple.hook(asteroids[i]);
           ship.orbit();
         }
       }
@@ -962,6 +994,22 @@ if(ship.grapple){
     context.rotate(ship.direction);
     context.fillText(ship.flag.name,0,0);
     context.restore();
+    //draw Tan
+    if(ship.tangent){
+      var canvasXS = canvas.width / 2 + ship.pos.x - player.eyes.x;
+      var canvasYS = canvas.height / 2 + ship.pos.y - player.eyes.y;
+      var canvasXE = canvas.width / 2 + ship.pos.x + ship.tangent.x * 100 - player.eyes.x;
+      var canvasYE = canvas.height / 2 + ship.pos.y + ship.tangent.y * 100 - player.eyes.y;
+      context.beginPath();
+      context.linedWidth = 3;
+      context.strokeStyle = 'red';
+      context.moveTo(canvasXS,canvasYS);
+      context.lineTo(canvasXE, canvasYE);
+      context.stroke();
+      context.linedWidth = 1;
+      context.strokeStyle = 'black';
+  
+    }
   });
     //draw planets
     for(var i = 0; i < planets.length; i++){
@@ -974,6 +1022,22 @@ if(ship.grapple){
     Object.keys(blocks).forEach(id =>{
       drawPoly(blocks[id],player);
     });
-
-    
+    //draw Astroid
+    asteroids.forEach(a =>{
+      var canvasX = canvas.width / 2 + a.pos.x - player.eyes.x;
+      var canvasY = canvas.height / 2 + a.pos.y - player.eyes.y;
+      context.beginPath();
+      context.arc(canvasX,canvasY,a.radius,0,2 * CONSTANTS.PI);
+      context.stroke();
+  
+    });
+    //draw Astroid Line
+    var canvasXS = canvas.width / 2 + AsteroidLineStart.x - player.eyes.x;
+    var canvasYS = canvas.height / 2 + AsteroidLineStart.y - player.eyes.y;
+    var canvasXE = canvas.width / 2 + AsteroidLineEnd.x - player.eyes.x;
+    var canvasYE = canvas.height / 2 + AsteroidLineEnd.y - player.eyes.y;
+    context.beginPath();
+    context.moveTo(canvasXS,canvasYS);
+    context.lineTo(canvasXE, canvasYE);
+    context.stroke();
 }

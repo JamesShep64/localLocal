@@ -97,6 +97,7 @@ export class PirateShip extends Polygon{
     this.turn = 1;
     this.tangent = new Vector(0,0);
     this.continued = false;
+    this.onAsteroid = false;
 
     //Takedamage 
     this.damages = [];
@@ -165,7 +166,6 @@ export class PirateShip extends Polygon{
     for(var i = 0; i < this.damages.length; i++){
       this.torque -= (this.damages[i].point.x)/1500;
     }
-
     if(!this.inOrbit){
       if(!this.stop){
         this.applyTorque();
@@ -189,6 +189,13 @@ export class PirateShip extends Polygon{
     else{
       this.collisionZeros[1] = this.collisionZero1;
       this.collisionZeros[8] = this.collisionZero8;
+    }
+    if(this.onAsteroid){
+      this.netVelocity.x +=this.planet.netVelocity.x;
+      this.netVelocity.y +=this.planet.netVelocity.y;
+
+      this.pos.x += dt * this.planet.netVelocity.x;
+      this.pos.y += dt * this.planet.netVelocity.y;
     }
   }
   updateDisplace(){
@@ -246,7 +253,6 @@ export class PirateShip extends Polygon{
     this.tangent = new Vector(-this.turn * (this.planet.pos.y - this.pos.y), this.turn * (this.planet.pos.x - this.pos.x)).unit();
     var now = new Vector(this.turn * (this.points[1].x - this.points[0].x), this.turn * (this.points[1].y - this.points[0].y)).unit();
     var rot = Math.acos(this.tangent.dot(now));
-        
         if(this.continueGrapple && this.direction < -this.turn * CONSTANTS.PI + .1 && this.direction > -this.turn * CONSTANTS.PI - .1){
           this.continued = true;        
         }

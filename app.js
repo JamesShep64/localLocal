@@ -135,4 +135,7 @@ app.get("/explosion",(req,res)=>{
 app.get("/flag",(req,res)=>{
     res.sendFile(path.join(__dirname,"flag.js"));
 });
-app.listen(3000, ()=>console.log("listening on port 3000"));
+
+app.get("/asteroid",(req,res)=>{
+    res.sendFile(path.join(__dirname,"asteroid.js"));
+});app.listen(3000, ()=>console.log("listening on port 3000"));
