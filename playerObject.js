@@ -59,6 +59,7 @@ export class PlayerObject extends Polygon{
     this.didOnLadder = false;
     //rope
     this.onRope = false;
+    this.didOnRope = false;
     //telescope
     this.eyes = new Vector(x,y);
     this.onTelescope = false;

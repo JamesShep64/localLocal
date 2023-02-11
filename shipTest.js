@@ -518,10 +518,18 @@ function draw(){
           player.rotateTo(0);
           player.onLadder = true;
           player.didOnLadder = true;
+          player.shipWithin = null;
+          player.withinShip = false;
+          player.didOnRope = true;
+          player.onRope = true;
           ship.hasPlayers[player.id] = player; 
         }
       }
     });
+    if(player.didOnRope){
+      player.onRope = true;
+    }else{player.onRope = false;}
+    player.didOnRope = false;
     //player ship Collision
     var {push,vec2, i,happened} = blockShipCollision(player,ship);
     if(happened){  
@@ -782,7 +790,7 @@ function draw(){
   player.didOnLadder = false;
 
   //player within ship fix
-  if(!player.didWithinShip && !player.onLadder){
+  if(!player.didWithinShip && !player.onRope){
     player.withinShip = false;
     player.shipWithin = null;
     player.setMove(new Vector(1,0));
