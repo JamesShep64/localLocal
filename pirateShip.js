@@ -131,6 +131,10 @@ export class PirateShip extends Polygon{
         
       }
     }
+    //update ropeBox
+    if(this.grapple?.gotHooked){
+      this.grapple.updateRopeBox();
+    }
     
     //update explosions
     Object.keys(this.explosions).forEach(id =>{
@@ -174,8 +178,18 @@ export class PirateShip extends Polygon{
     else{
       this.orbit();
     }
+    
     //trap door update
     this.trapDoor.update(dt);
+   
+    //give asteroid speed
+    if(this.onAsteroid){
+      this.netVelocity.x +=this.planet.netVelocity.x;
+      this.netVelocity.y +=this.planet.netVelocity.y;
+      this.pos.x += dt * this.planet.netVelocity.x;
+      this.pos.y += dt * this.planet.netVelocity.y;
+    }
+
     //change collision zeros for trap door
     if(this.trapDoor.isClosed){
       this.collisionZeros[1] = 'a';
@@ -190,13 +204,7 @@ export class PirateShip extends Polygon{
       this.collisionZeros[1] = this.collisionZero1;
       this.collisionZeros[8] = this.collisionZero8;
     }
-    if(this.onAsteroid){
-      this.netVelocity.x +=this.planet.netVelocity.x;
-      this.netVelocity.y +=this.planet.netVelocity.y;
 
-      this.pos.x += dt * this.planet.netVelocity.x;
-      this.pos.y += dt * this.planet.netVelocity.y;
-    }
   }
   updateDisplace(){
     this.pos.x += this.displace.x;
@@ -453,7 +461,7 @@ export class PirateShip extends Polygon{
       }
     }
     if(!no){
-      this.damages.push({point : damage, surface : j, health : 300 - power});
+      this.damages.push({point : damage, surface : j, health : 190- power});
       }
   }
 

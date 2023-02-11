@@ -32,6 +32,7 @@ export class PlayerObject extends Polygon{
     this.movingLeft = false;
     this.movingUp = false;
     this.movingDown = false;
+
     this.setMove(new Vector(1,0));
 
     //ITEM INTERACTION
@@ -56,11 +57,34 @@ export class PlayerObject extends Polygon{
     this.onLadder = false;
     this.movedOnLadder = false;
     this.didOnLadder = false;
+    //rope
+    this.onRope = false;
     //telescope
     this.eyes = new Vector(x,y);
     this.onTelescope = false;
   }
     update(dt) {
+      if(this.movingLeft){
+        this.moveLeft();
+      }
+      else if(this.movingRight){
+        this.moveRight();
+      }
+      else{
+        this.horizMove.x = 0;
+        this.horizMove.y = 0;
+      }
+      if(this.movingUp){
+        this.vertMove = this.upMove;
+      }
+      else if(this.movingDown){
+        this.vertMove = this.downMove;
+      }
+      else{
+        this.vertMove.x = 0;
+        this.vertMove.y = 0;
+      }
+      
       //drop items
       if((!this.isGrabing && this.isHolding)){
         this.drop();
@@ -359,7 +383,6 @@ export class PlayerObject extends Polygon{
       if(this.movedOnLadder){
         this.jumpVel.x = this.jump.x * 65;
         this.jumpVel.y = this.jump.y * 65;
-        console.log('a');  
       }
       else{
         this.jumpVel.x = this.jump.x * 45;

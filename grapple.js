@@ -1,5 +1,6 @@
 import Vector from "./2Dvector";
 import { CannonBall } from "./cannonBall";
+import { Polygon } from "./polygon";
 
 
 export class Grapple extends CannonBall{
@@ -14,6 +15,7 @@ export class Grapple extends CannonBall{
         this.start = new Vector(0,0);
         this.forwardMove = new Vector(0,0);
         this.ship = ship;
+        this.ropeBox;
     }
 
     update(dt){
@@ -28,6 +30,7 @@ export class Grapple extends CannonBall{
     }
 
     hook(planet){
+        this.updateRopeBox();
         this.pos = planet.pos;
         this.planet = planet;
         this.gotHooked = true;
@@ -35,8 +38,15 @@ export class Grapple extends CannonBall{
         if(planet.constructor.name == 'Asteroid')
             this.ship.onAsteroid = true;
     }
+    updateRopeBox(){
+        var now = new Vector(this.ship.turn * (this.ship.points[1].x - this.ship.points[0].x), this.ship.turn * (this.ship.points[1].y - this.ship.points[0].y)).unit();
+        this.ropeBox = new Polygon([new Vector(this.cannon.pos.x+now.x*5, this.cannon.pos.y + now.y*5),new Vector(this.cannon.pos.x-now.x*5, this.cannon.pos.y-now.y*5),
+        new Vector(this.pos.x-now.x*5, this.pos.y-now.y*5),new Vector(this.pos.x+now.x*5, this.pos.y+now.y*5)]);
+
+    }
 
     detach(){
+        this.ropeBox = null;
         this.gotHooked = false;
         this.ship.inOrbit = false;
         this.ship.grapple = null;
@@ -55,5 +65,5 @@ export class Grapple extends CannonBall{
         if(other.pos.x < this.pos.x + width && other.pos.x > this.pos.x - width && other.pos.y < this.pos.y + height && other.pos.y > this.pos.y - height)
           return true;
         return false;
-      }  
+      } 
 }
