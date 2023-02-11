@@ -76,7 +76,7 @@ function keysDown(e){
     }
 
     if(e.key == 'p'){
-      planets.push(new Planet(-canvas.width / 2 + mouseX + player.pos.x, -canvas.height / 2 + mouseY + player.pos.y));
+      planets.push(new Planet(-canvas.width / 2 + mouseX + player.pos.x, -canvas.height / 2 + mouseY + player.pos.y,'speedBoost'));
     }
 
     if(e.key == 'd'){
@@ -533,6 +533,10 @@ function draw(){
     //player ship Collision
     var {push,vec2, i,happened} = blockShipCollision(player,ship);
     if(happened){  
+      if(player.holdingPower){
+        ship.munitions[player.holdingPower]++;
+        player.holdingPower = null;
+      }
       color = 'red';
       if(vec2){
         player.rotateTo(ship.direction);
@@ -838,7 +842,6 @@ function draw(){
       }
   });  
 
-
     
   //PLAYER COLLISION FIX
     if(!player.didCol){
@@ -846,6 +849,18 @@ function draw(){
     }
     player.didCol = false;
 
+    //player planet collision
+    planets.forEach(planet =>{
+      var happened = blockCollision(player,planet);
+      if(happened){
+        var {push} = happened;
+        player.displace.add(push);
+        if(planet.power){
+          player.holdingPower = planet.power +'';
+          planet.power = null;
+        }
+      }
+    });
   //block block Collision
   var comboCol = {};
   Object.keys(blocks).forEach(id => {
@@ -973,6 +988,63 @@ if(ship.grapple){
     context.fillStyle = "rgb("+(ship.cannon1.loadTimer*18).toString()+", 10, 10)";
     context.fill();
     context.fillStyle = 'black';
+    var numOfShots = 1;
+    if(ship.cannon1.beingUsed){
+      Object.values(ship.munitions).forEach(n=>{
+        if(n != 'a' || n > 0){
+          numOfShots++;
+        }
+      });
+      context.save();
+      var column = 0;
+      context.translate(canvas.width/2 - player.eyes.x + ship.cannon1.pos.x,canvas.height/2 - player.eyes.y + ship.cannon1.pos.y);
+      context.rotate(ship.direction);
+      context.globalAlpha = .8;
+      var cannonBall = new Image();
+      cannonBall.src = './'+'cannonBall'+'.svg';
+      context.drawImage(cannonBall,-10*numOfShots + 25*column,-40,40,40);
+      if(column == ship.cannon1.selected){
+        context.lineWidth = 2;
+        context.strokeStyle = 'blue';
+      }
+      context.strokeRect(-10*numOfShots + 25*column,-40,22,22);
+      context.lineWidth = 1;
+      context.strokeStyle = 'black';
+
+
+      column++;
+      var grapple = new Image();
+      grapple.src = './'+'grapple'+'.svg';
+      context.drawImage(grapple,-10*numOfShots + 25*column,-40,40,40);
+      if(column == ship.cannon1.selected){
+        context.strokeStyle = 'blue';
+        context.lineWidth = 2;
+      }
+      context.strokeRect(-10*numOfShots + 25*column,-40,22,22);
+      context.strokeStyle = 'black';
+      context.lineWidth = 1;
+
+
+      if(ship.munitions['speedBoost'] > 0){
+      column++;
+      var speedBoost = new Image();
+      speedBoost.src = './'+'speedBoost'+'.svg';
+      context.drawImage(speedBoost,-10*numOfShots + 25 * column,-40,40,40);
+      if(column == ship.cannon1.selected){
+        context.strokeStyle = 'blue';
+        context.lineWidth = 2;
+      }
+      context.strokeRect(-10*numOfShots+25*column,-40,22,22);
+      context.lineWidth = 1;
+      context.strokeStyle = 'black';
+      context.font = "25px serif";
+      context.fillStyle = 'black';
+      context.fillText(ship.munitions.speedBoost+'',-10*numOfShots + 25 * column+ 5,-20,40);
+      }
+      context.restore();
+      context.globalAlpha = 1;
+
+    }
     
     //drawLowerCannon1
     var canvasX = canvas.width / 2 + ship.cannonLower1.pos.x - player.eyes.x;
@@ -1051,9 +1123,26 @@ if(ship.grapple){
     //draw planets
     for(var i = 0; i < planets.length; i++){
       drawPoly(planets[i],player);
+      if(planets[i].power){
+        var canvasX = canvas.width / 2 + planets[i].pos.x - player.eyes.x;
+        var canvasY = canvas.height / 2 + planets[i].pos.y - player.eyes.y;
+        var boost = new Image();
+        boost.src = './'+planets[i].power+'.svg';
+        context.drawImage(boost, canvasX-27, canvasY-27,100,100);
+      }
+  
     }
     //draw Player
     drawPoly(player,player);
+    if(player.holdingPower){
+      var boost = new Image();
+      context.save();
+      context.translate(canvas.width/2 - player.eyes.x + player.pos.x + player.points[0].x ,canvas.height/2 - player.eyes.y + player.pos.y + player.points[0].y);
+      context.rotate(player.direction);
+      boost.src = './'+player.holdingPower+'.svg';
+      context.drawImage(boost, 10,0,50,50);
+      context.restore();
+    }
     //draw Block
     color = 'green';
     Object.keys(blocks).forEach(id =>{
@@ -1076,6 +1165,5 @@ if(ship.grapple){
     context.beginPath();
     context.moveTo(canvasXS,canvasYS);
     context.lineTo(canvasXE, canvasYE);
-    context.stroke();
-    
-  }
+    context.stroke(); 
+     }  

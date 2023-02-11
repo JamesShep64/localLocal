@@ -34,6 +34,8 @@ export class Cannon{
         this.holder;
         this.beingUsed = false;
         this.user;
+        this.selected = 0;
+        this.chosen = 'cannonBall';
         //set side for stationary cannons
         this.side = side;
         //rotate barrel to starting position
@@ -165,6 +167,27 @@ export class Cannon{
         var proj = new Vector(((point.x * line.x + point.y * line.y) / (line.x * line.x + line.y * line.y)) * line.x + zero.x,
         ((point.x * line.x + point.y * line.y) / (line.x * line.x + line.y * line.y)) * line.y + zero.y);
         return proj;
+    }
+
+    moveSelected(){
+        var numOfShots = 0;
+        Object.values(this.ship.munitions).forEach(n=>{
+            if(n == 'a' || n > 0){
+                numOfShots++;
+            }
+        });
+        
+        if(this.selected < numOfShots - 1){
+            this.selected++;
+        }
+        else{
+            this.selected = 0;
+        }
+        console.log(this.selected);
+    }
+
+    fireShot(){
+
     }
 
     loadCannonBall(dt){

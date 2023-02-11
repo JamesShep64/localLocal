@@ -142,4 +142,13 @@ app.get("/asteroid",(req,res)=>{
 app.get("/playerRopeCollision",(req,res)=>{
     res.sendFile(path.join(__dirname,"playerRopeCollision.js"));
 });
+app.get("/speedBoost.svg",(req,res)=>{
+    res.sendFile(path.join(__dirname,"speedBoost.svg"));
+});
+app.get("/grapple.svg",(req,res)=>{
+    res.sendFile(path.join(__dirname,"grapple.svg"));
+});
+app.get("/cannonBall.svg",(req,res)=>{
+    res.sendFile(path.join(__dirname,"cannonBall.svg"));
+});
 app.listen(3000, ()=>console.log("listening on port 3000"));

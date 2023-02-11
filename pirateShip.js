@@ -101,6 +101,8 @@ export class PirateShip extends Polygon{
 
     //Takedamage 
     this.damages = [];
+    //munitions
+    this.munitions = {cannonBall:'a',grapple:'a',speedBoost:0,};
     
   }    
 

@@ -63,6 +63,8 @@ export class PlayerObject extends Polygon{
     //telescope
     this.eyes = new Vector(x,y);
     this.onTelescope = false;
+    //power ups
+    this.holdingPower;
   }
     update(dt) {
       if(this.movingLeft){
@@ -307,7 +309,7 @@ export class PlayerObject extends Polygon{
 
     if(key == 'k'){
       if(this.isUsing  && !this.onTelescope)
-        this.using.shootGrapple();
+        this.using.moveSelected();
     }
 
     if(key == 'w'){
@@ -349,7 +351,7 @@ export class PlayerObject extends Polygon{
     if(key == ' '){
       if(this.isUsing && !this.onTelescope)
       {
-        this.using.fireCannonBall();
+        this.using.fireShot();
       }
     }
   }
